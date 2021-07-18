@@ -4,3 +4,4 @@ test
 test -- second line
 test -- third line
 pr test test
+test conflict

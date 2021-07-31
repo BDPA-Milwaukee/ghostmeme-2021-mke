@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title> Meme Testing </title>
+
+  <script src="/js/memefunctions.js"></script>
+</head>
+
+<body>
+  <script>
+    function listMemes() {
+      var request = new XMLHttpRequest();
+
+      request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+      request.setRequestHeader('content-type', 'application/json');
+
+      request.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          console.log('Status:', this.status);
+          console.log('Headers:', this.getAllResponseHeaders());
+          console.log('Body:', this.responseText);
+          //alert(this.responseText);
+          //parse the JSON response
+          var result = JSON.parse(this.responseText);
+          //alert("got here");
+          //pull an array with the list of memes
+          // should get that the success is true
+          if (!result.success) {
+            alert("you encountered an error start again.");
+          }
+          var memearray = result.memes;
+          //get how many memes we have (array length)
+          var length = memearray.length;
+          //alert("Number of memes:"+length);
+          //Set the initial start of meme List
+          var memeoutput = "<h2>List of Memes</h2>";
+          //Start a table for the list of memes
+          memeoutput += "<table>"
+          //Create a title row
+          memeoutput += "<tr><th>Owner</th><th>Description</th><th>ImageURL</th></tr>"
+          //For loop to go and list each meme in the array
+          for (i = 0; i < 10; i++) {
+            //Starting a new row
+            memeoutput += "<tr>";
+            //Add the owner of meme 
+            memeoutput += "<td>" + memearray[i].owner + "</td>";
+            //Add the desc of meme
+            memeoutput += "<td>" + memearray[i].description + "</td>";
+            //Image
+            var url = memearray[i].imageUrl;
+            if (url == "null") {
+              memeoutput += "<td> No image! </td>"
+            } else {
+              memeoutput += "<td><img src=\"" + url + "\" style=\"height: 50px;\"></td>"
+            }
+            memeoutput += "<td>" + memearray[i].imageUrl + "</td>"
+            //End the row
+            memeoutput += "</tr>";
+          }
+          //End the table
+          memeoutput += "</table>";
+          //alert(memeoutput);
+
+          document.getElementById("MemeList").innerHTML = memeoutput;
+          document.getElementById("MemeList").style.visibility = "visible";
+        }
+
+      }
+      request.send();
+
+    }
+  </script>
+
+  <h1> Ghostmeme Testing </h1>
+  <form>
+    <input type="button" id="Memes" onclick="return listMemes()" value="List Memes">
+
+    <div id="MemeList">
+      <h2>List of Memes</h2>
+    </div>
+
+  </form>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><%= title %></title>
+<link rel="stylesheet" href="style.css">
+
+<script>
+
+    function PWTest() {
+            var username = document.forms["login"]["uName"].value; // Get Values from the form
+            var password = document.forms["login"]["pWord"].value; // Get Values from the form
+            var un = localStorage.getItem("regUName");
+            var pw = localStorage.getItem("regPWord");
+
+            var userList = ["Root"];  // creating an array / list of usernames
+            var pwList = ["BDPA"];  // creating an array / list of passwords
+
+            for (var i = 0; i < userList.length; i++)  //traversing the array / list of usernames and passwords
+            {
+                if (username == userList[i] && password == pwList[i]) // checks if the username given is equal to one in the array
+                {
+                    localStorage.setItem("uName", username);
+                    alert("login successful");
+                    return true;
+                }
+            }
+
+            return false;
+
+            document.getElementById("uName").value = ""; // clears the field after use
+            document.getElementById("pWord").value = "";// clears the field after use
+        }
+
+        function SetWelcome() {
+            var user = sessionStorage.getItem("uName");
+            if (user == null) {
+                user = "friend";
+            }
+            document.getElementById("welcome").innerHTML = "Hello, " + user;
+        }
+</script>
+
+</head>
+<body>
+
+<% if (messages.error) { %>
+<p style="color:red"><%- messages.error %></p>
+<% } %>
+<% if (messages.success) { %>
+<p style="color:green"><%- messages.success %></p>
+<% } %>
+
+
+    <form method="post" name="login" id="login" onsubmit="return PWTest()" action = "/views/auth/page2.ejs">
+    <div style="font-size: 25px; margin:10px; color: white;">Login</div>
+
+    <div class="form-group">
+        <label for="uName">Username</label>
+        <input type="text" name="uName" class="form-control" id="uName" placeholder="Username" value="">
+    </div>
+
+    <br>
+    <br>
+
+    <div class="form-group">
+        <label for="pWord"> Password </label>
+        <input type="password" name="pWord" class="form-control" id="pWord" placeholder="*********" value="">
+    </div>
+
+    <br>
+    <br>
+
+    <div class="form-group">
+        <label for="Remember">Remember Me</label>
+        <input type="checkbox" name="Remember" class="form-control" id="Remember">
+    </div>
+
+    <br>
+
+    <input type="submit" class="btn btn-primary">
+
+    </form>
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <div class="box">
+
+    <div class="form-group">
+        <label for="signup">Don't have an account? </label>
+        <a href="signup.ejs" id="signup">Sign Up</a>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="form-group">
+        <label for="forgot">Forgot your password? </label>
+        <a href="recover.ejs" id="forgot" >Recover Account</a>
+    </div>
+    
+    </div>
+
+</body>
+</html>

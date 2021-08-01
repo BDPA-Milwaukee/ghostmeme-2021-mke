@@ -42,10 +42,6 @@
           //alert("Number of memes:"+length);
           //Set the initial start of meme List
           var memeoutput = "";
-          //Start a table for the list of memes
-          memeoutput += "<table>"
-          //Create a title row
-          memeoutput += "<tr><th>Owner</th><th>Description</th><th>ImageURL</th></tr>"
           //For loop to go and list each meme in the array
           for (i = 0; i < 100; i++) {
             /* For verification that user is authorized to see meme -- once auth system implemented can delete the /* + *_/ (or combine with below loop). Can there be more than one 'receiver'?
@@ -58,26 +54,43 @@
               continue;
             }
             //Starting a new row
-            memeoutput += "<tr>";
-            //Add the owner of meme 
-            memeoutput += "<td>" + memearray[i].owner + "</td>";
-            //Add the desc of meme
-            memeoutput += "<td>" + memearray[i].description + "</td>";
+            memeoutput += "<br>";
             //Image
             var url = memearray[i].imageUrl;
             if (url === null) {
-              memeoutput += "<td> No image! </td>"
+              memeoutput += "No image!<br>"
             } else {
-              memeoutput += "<td><img src=\"" + url + "\" style=\"height: 50px;\"></td>"
+              memeoutput += "<img src=\"" + url + "\" style=\"width: 40%; display: block; margin-left: auto; margin-right: auto;\"><br>"
             }
-            //Receiver
-            memeoutput += "<td>" + memearray[i].receiver + "</td>"
-            //End the row
-            memeoutput += "</tr>";
+            //Description
+            memeoutput += "<b>Description: </b>" + memearray[i].description + "<br>"
+            //Like Count
+            memeoutput += "<b>Likes: </b>" + memearray[i].likes + "<br>"
+            //Creation Date
+            memeoutput += "<b>Creation Time: </b>" + memearray[i].createdAt + "<br>"
+            //Expiration Time:
+            memeoutput += "<b>Expiration time: </b>"
+            if (memearray[i].expiredAt === -1) {
+              memeoutput += "None<br>"
+            } else if (!memearray[i].expiredAt) {
+              memeoutput += "None entered<br>"
+            } else {
+              var dateObject = new Date(memearray[i].expiredAt)
+              memeoutput += dateObject.toLocaleString() + "<br>"
+            }
+            //Meme ID
+            memeoutput += "<b>Meme ID: </b>" + memearray[i].meme_id + "<br>"
+            //Poster
+            memeoutput += "<b>Poster ID: </b>" + memearray[i].owner + "<br>"
+            //Meme Replied To
+            memeoutput += "<b>ID of Meme Replied To: </b>"
+            if (memearray[i].replyTo === null) {
+              memeoutput += "This is an original meme!"
+            } else {
+              memeoutput += memearray[i].replyTo
+            }
+            memeoutput += "<br><br>"
           }
-          //End the table
-          memeoutput += "</table>";
-          //alert(memeoutput);
 
           document.getElementById("MemeList").innerHTML = memeoutput;
           document.getElementById("MemeList").style.visibility = "visible";
@@ -125,7 +138,7 @@
         "expiredAt": timeToExpireUnixNumberFormat
       };
 
-      request.send(body);
+      request.send();
       alert("Thank you! Please hit \"OK\" for the request to process.")
     }
 
@@ -172,7 +185,7 @@
         "imageBase64": null
       };
 
-      request.send(body);
+      request.send();
       alert("Thank you! Please hit \"OK\" for the request to process.")
     }
   </script>
@@ -182,9 +195,11 @@
   <form onsubmit="return updateMemeExpiration(this)" id="editExpirationTimeForm">
     <label for="memeIDs">Enter the ID(s) of the meme(s) that you want to expire, separated by a "/":</label><br>
     <input type="text" id="memeIDs" name="memeIDs" required><br><br>
-    <label for="expirationTime">Enter the time (local time) you want the meme(s) to expire at (leaving this empty will cause the meme(s) to expire immediately):</label><br>
+    <label for="expirationTime">Enter the time (local time) you want the meme(s) to expire at (leaving this empty will
+      cause the meme(s) to expire immediately):</label><br>
     <input type="datetime-local" id="expirationTime" name="expirationTime"><br><br>
-    <label for="memeNoExpiration">OR, check this box for the meme to never expire (your input in the date-time field will be
+    <label for="memeNoExpiration">OR, check this box for the meme to never expire (your input in the date-time field
+      will be
       disregarded):</label>
     <input type="checkbox" id="memeNoExpiration" name="memeNoExpiration"><br><br>
     <input type="submit" value="Submit">

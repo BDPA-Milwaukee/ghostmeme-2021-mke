@@ -2,7 +2,7 @@
 <html xml:lang>
 
 <head>
-  <title> Meme Testing </title>
+  <title>Chats -- Ghostmeme</title>
 
   <script src="/js/memefunctions.js"></script>
 </head>
@@ -151,7 +151,7 @@
       var memeDateFormat = new Date(dateMemeToExpireAt);
       var memeTimeToExpireUnix = memeDateFormat.getTime();
       var memeTimeToExpireUnixNumberFormat = memeTimeToExpireUnix.valueOf();
-      if (document.forms["createMemeForm"]["noExpirationNewMeme"].value === 'on') {
+      if (document.getElementById("noExpirationNewMeme").checked === true) {
         var timeToExpireUnixNumberFormat = null;
       }
 
@@ -178,7 +178,7 @@
         "owner": "", /* Figure out how to get current user */
         "receiver": memeReceiver,
         "expiredAt": memeTimeToExpireUnixNumberFormat,
-        "description": newMemeDescription,
+        "description": "" + newMemeDescription,
         "private": true,
         "replyTo": null,
         "imageUrl": "" + memeImageURL,

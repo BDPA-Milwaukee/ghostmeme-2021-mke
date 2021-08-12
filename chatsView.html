@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xml:lang>
+
+<head>
+  <title>Chats -- Ghostmeme</title>
+
+  <script src="/js/memefunctions.js"></script>
+</head>
+
+<body onload="listMemes()">
+  <script>
+    function reloadPage() {
+      location.reload();
+      return false;
+    }
+    function listMemes() {
+      var request = new XMLHttpRequest();
+
+      request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+      request.setRequestHeader('content-type', 'application/json');
+
+      request.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          console.log('Status:', this.status);
+          console.log('Headers:', this.getAllResponseHeaders());
+          console.log('Body:', this.responseText);
+          //alert(this.responseText);
+          //parse the JSON response
+          var result = JSON.parse(this.responseText);
+          //alert("got here");
+          //pull an array with the list of memes
+          // should get that the success is true
+          if (!result.success) {
+            alert("You encountered an error, please refresh your feed.");
+            return;
+          }
+          var memearray = result.memes;
+          //get how many memes we have (array length)
+          var length = memearray.length;
+          //alert("Number of memes:"+length);
+          //Set the initial start of meme List
+          var memeoutput = "";
+          //For loop to go and list each meme in the array
+          for (i = 0; i < 100; i++) {
+            /* For verification that user is authorized to see meme -- once auth system implemented can delete the /* + *_/ (or combine with below loop). Can there be more than one 'receiver'?
+           if (memearray[i].receiver !== **insert logged in user ID here**) {
+             continue;
+           }
+            */
+            //Checking conditions
+            if (memearray[i].expiredAt === null || ((memearray[i].expiredAt <= Date.now()) && (memearray[i].expiredAt >= 0))) {
+              continue;
+            }
+            //Starting a new row
+            memeoutput += "<br>";
+            //Image
+            var url = memearray[i].imageUrl;
+            if (url === null) {
+              memeoutput += "No image!<br>"
+            } else {
+              memeoutput += "<img src=\"" + url + "\" style=\"width: 40%; display: block; margin-left: auto; margin-right: auto;\"><br>"
+            }
+            //Description
+            memeoutput += "<b>Description: </b>" + memearray[i].description + "<br>"
+            //Like Count
+            memeoutput += "<b>Likes: </b>" + memearray[i].likes + "<br>"
+            //Creation Date
+            memeoutput += "<b>Creation Time: </b>" + memearray[i].createdAt + "<br>"
+            //Expiration Time:
+            memeoutput += "<b>Expiration time: </b>"
+            if (memearray[i].expiredAt === -1) {
+              memeoutput += "None<br>"
+            } else if (!memearray[i].expiredAt) {
+              memeoutput += "None entered<br>"
+            } else {
+              var dateObject = new Date(memearray[i].expiredAt)
+              memeoutput += dateObject.toLocaleString() + "<br>"
+            }
+            //Meme ID
+            memeoutput += "<b>Meme ID: </b>" + memearray[i].meme_id + "<br>"
+            //Poster
+            memeoutput += "<b>Poster ID: </b>" + memearray[i].owner + "<br>"
+            //Meme Replied To
+            memeoutput += "<b>ID of Meme Replied To: </b>"
+            if (memearray[i].replyTo === null) {
+              memeoutput += "This is an original meme!"
+            } else {
+              memeoutput += memearray[i].replyTo
+            }
+            memeoutput += "<br><br>"
+          }
+
+          document.getElementById("MemeList").innerHTML = memeoutput;
+          document.getElementById("MemeList").style.visibility = "visible";
+        }
+
+      }
+      request.send();
+
+    }
+
+    function updateMemeExpiration(form) {
+      var memeIDsToUse = document.getElementById("memeIDs");
+      var dateToExpireAt = document.forms["editExpirationTimeForm"]["expirationTime"].value;
+      var dateFormat = new Date(dateToExpireAt);
+      var timeToExpireUnix = dateFormat.getTime();
+      var timeToExpireUnixNumberFormat = timeToExpireUnix.valueOf();
+      if (document.getElementById("memeNoExpiration").checked === true) {
+        var timeToExpireUnixNumberFormat = -1;
+      } else if (!dateToExpireAt) {
+        var timeToExpireUnixNumberFormat = 0;
+      }
+      /* API Request */
+      var request = new XMLHttpRequest();
+
+      request.open('PUT', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes/' + memeIDsToUse);
+
+      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+      request.setRequestHeader('content-type', 'application/json');
+
+      request.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          console.log('Status:', this.status);
+          console.log('Headers:', this.getAllResponseHeaders());
+          console.log('Body:', this.responseText);
+          var result = JSON.parse(this.responseText);
+          if (!result.success) {
+            alert("There was an error, please try again. Please ensure the meme IDs are still valid.")
+          } else {
+            alert("Success!")
+          }
+        }
+      };
+
+      var body = {
+        "expiredAt": timeToExpireUnixNumberFormat
+      };
+
+      request.send();
+      alert("Thank you! Please hit \"OK\" for the request to process.")
+    }
+
+    function createMeme() {
+      var memeReceiver = document.getElementById("memeRecipient");
+      var newMemeDescription = document.getElementById("memeDescription")
+      var memeImageURL = document.getElementById("memeURL");
+
+      var dateMemeToExpireAt = document.forms["createMemeForm"]["expirationNewMeme"].value;
+      var memeDateFormat = new Date(dateMemeToExpireAt);
+      var memeTimeToExpireUnix = memeDateFormat.getTime();
+      var memeTimeToExpireUnixNumberFormat = memeTimeToExpireUnix.valueOf();
+      if (document.getElementById("noExpirationNewMeme").checked === true) {
+        var timeToExpireUnixNumberFormat = null;
+      }
+
+
+      var request = new XMLHttpRequest();
+
+      request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+      request.setRequestHeader('content-type', 'application/json');
+
+      request.onreadystatechange = function () {
+        if (this.readyState === 4) {
+          console.log('Status:', this.status);
+          console.log('Headers:', this.getAllResponseHeaders());
+          console.log('Body:', this.responseText);
+
+          alert("Success!")
+        }
+      };
+
+
+      var body = {
+        "owner": "", /* Figure out how to get current user */
+        "receiver": memeReceiver,
+        "expiredAt": memeTimeToExpireUnixNumberFormat,
+        "description": "" + newMemeDescription,
+        "private": true,
+        "replyTo": null,
+        "imageUrl": "" + memeImageURL,
+        "imageBase64": null
+      };
+
+      request.send();
+      alert("Thank you! Please hit \"OK\" for the request to process.")
+    }
+  </script>
+
+  <h1 style="text-align: center;">Chats</h1>
+  <h3 style="text-align: center;">Set Meme Expirations</h3>
+  <form onsubmit="return updateMemeExpiration(this)" id="editExpirationTimeForm">
+    <label for="memeIDs">Enter the ID(s) of the meme(s) that you want to expire, separated by a "/":</label><br>
+    <input type="text" id="memeIDs" name="memeIDs" required><br><br>
+    <label for="expirationTime">Enter the time (local time) you want the meme(s) to expire at (leaving this empty will
+      cause the meme(s) to expire immediately):</label><br>
+    <input type="datetime-local" id="expirationTime" name="expirationTime"><br><br>
+    <label for="memeNoExpiration">OR, check this box for the meme to never expire (your input in the date-time field
+      will be
+      disregarded):</label>
+    <input type="checkbox" id="memeNoExpiration" name="memeNoExpiration"><br><br>
+    <input type="submit" value="Submit">
+  </form>
+  <h3 style="text-align: center;">Send a Meme</h3>
+  <form onsubmit="return createMeme(this)" id="createMemeForm">
+    <label for="memeRecipient">Enter the ID of the recipient of this meme:</label><br>
+    <input type="text" id="memeRecipient" name="memeRecipient" required><br><br>
+    <label for="expirationNewMeme">Enter the time (local time) you want the meme to expire at:</label><br>
+    <input type="datetime-local" id="expirationNewMeme" name="expirationNewMeme"><br><br>
+    <label for="noExpirationNewMeme">Alternatively, check this box to not set an expiration time (your input above will
+      be ignored):</label><br>
+    <input type="checkbox" id="noExpirationNewMeme" name="noExpirationNewMeme"><br><br>
+    <label for="memeDescription">Enter the description of the meme [optional]:</label><br>
+    <input type="text" id="memeDescription" name="memeDescription"><br><br>
+    <label for="memeURL">Enter the URL for the image of the meme:</label><br>
+    <input type="url" id="memeURL" name="memeURL" required><br><br>
+    <input type="submit" value="Submit">
+  </form>
+
+
+  <h3 style="text-align: center;">Meme Feed</h3>
+  <div id="MemeList">
+  </div>
+  <button onclick="listMemes()">Refresh Feed</button>
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Stories -- Ghostmeme</title>
+</head>
+
+<body onload="listMemes()">
+    <script>
+        function getFriendsArray() {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* Get current logged in User ID here */ + '/friends?');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    var friendsOfUser = result.users;
+                }
+            };
+
+            request.send();
+        }
+        function listMemes() {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+                    //alert(this.responseText);
+                    //parse the JSON response
+                    var result = JSON.parse(this.responseText);
+                    //alert("got here");
+                    //pull an array with the list of memes
+                    // should get that the success is true
+                    if (!result.success) {
+                        alert("You encountered an error, please refresh your feed.");
+                        return;
+                    }
+                    var memearray = result.memes;
+                    //get how many memes we have (array length)
+                    var length = memearray.length;
+                    //alert("Number of memes:"+length);
+                    //Set the initial start of meme List
+                    var memeoutput = "";
+                    //For loop to go and list each meme in the array
+                    for (i = 0; i < 100; i++) {
+                        /* For verification that user is authorized to see meme -- once auth system implemented can delete the /* + *_/ (or combine with below loop). Can there be more than one 'receiver'?
+                       if (memearray[i].receiver !== **insert logged in user ID here**) {
+                         continue;
+                       }
+                        */
+                        //Checking conditions
+                        var memeIsFromFriend = false;
+
+                        for (i = 0; i < friendsOfUser.length; i++) {
+                            if (memearray[i].owner === friendsOfUser[i]) {
+                                var memeIsFromFriend = true;
+                            }
+                        }
+
+                        if ((memeIsFromFriend !== true)  /* || (memearray[i].owner === **check current user's ID**) */) {
+                            break;
+                        } else {
+                        }
+
+                        if (memearray[i].expiredAt === null || ((memearray[i].expiredAt <= Date.now()) && (memearray[i].expiredAt >= 0))) {
+                            continue;
+                        }
+                        //Starting a new row
+                        memeoutput += "<br>";
+                        //Image
+                        var url = memearray[i].imageUrl;
+                        if (url === null) {
+                            memeoutput += "No image!<br>"
+                        } else {
+                            memeoutput += "<img src=\"" + url + "\" style=\"width: 40%; display: block; margin-left: auto; margin-right: auto;\"><br>"
+                        }
+                        //Description
+                        memeoutput += "<b>Description: </b>" + memearray[i].description + "<br>"
+                        //Like Count
+                        memeoutput += "<b>Likes: </b>" + memearray[i].likes + "<br>"
+                        //Like actions
+                        memeoutput += "<button onclick=\"checkLikes(" + memearray[i].meme_id + ")\">Have you liked this meme?</button>&nbsp;&nbsp;&nbsp;&nbsp;<button onClick=\"likeMeme(" + memearray[i].meme_id + ")\">Like</button>&nbsp;&nbsp;<button onclick=\"unlikeMeme(" + memearray[i].meme_id + ")\">Unlike</button><br>"
+                        //Share / vanish
+                        if (memearray[i].owner === null /* <-- replace **Current authed user** */) {
+                            memeoutput += "<button onclick=\"deleteMeme(" + memearray[i].meme_id + ")\">Ghost meme! (delete meme)</button><br>"
+                        } else {
+                            memeoutput += "<button onclick'\"memeRepost(" + memearray[i].meme_id + ", " + memearray[i].expiredAt + ", " + memearray[i].description + ", " + memearray[i].imageUrl + ", " + ">Repost this meme! (Meme expirty date is the same as this meme you are reposting)</button><br>"
+                        }
+                        //Creation Date
+                        memeoutput += "<b>Creation Time: </b>" + memearray[i].createdAt + "<br>"
+                        //Expiration Time:
+                        memeoutput += "<b>Expiration time: </b>"
+                        if (memearray[i].expiredAt === -1) {
+                            memeoutput += "None<br>"
+                        } else if (!memearray[i].expiredAt) {
+                            memeoutput += "None entered<br>"
+                        } else {
+                            var dateObject = new Date(memearray[i].expiredAt)
+                            memeoutput += dateObject.toLocaleString() + "<br>"
+                        }
+                        //Meme ID
+                        memeoutput += "<b>Meme ID: </b>" + memearray[i].meme_id + "<br>"
+                        //Poster
+                        memeoutput += "<b>Poster ID: </b>" + memearray[i].owner + "<br>"
+                        //Meme Replied To
+                        memeoutput += "<b>Replied to: </b>"
+                        if (memearray[i].replyTo === null) {
+                            memeoutput += "<b>Reply to this meme: </b><form onsubmit=\"return replyToMeme(this, " + memearray[i].meme_id + " )\" id=\"replyMemeForm\">"
+                            "<label for=\"expirationReplyMeme\">Enter the time (local time) you want the meme to expire at:</label><br>"
+                            "<input type=\"datetime-local\" id=\"expirationReplyMeme\" name=\"expirationReplyMeme\"><br><br>"
+                            "<label for=\"noExpirationReplyMeme\">Alternatively, check this box to not set an expiration time (your input above will be ignored):</label><br>"
+                            "<input type=\"checkbox\" id=\"noExpirationReplyMeme\" name=\"noExpirationReplyMeme\"><br><br>"
+                            "<label for=\"replyMemeDescription\">Enter the description of the meme [optional]:</label><br>"
+                            "<input type=\"text\" id=\"replyMemeDescription\" name=\"replyMemeDescription\"><br><br>"
+                            "<label for=\"replyMemeURL\">Enter the URL for the image of the meme [optional]:</label><br>"
+                            "<input type=\"url\" id=\"replyMemeURL\" name=\"replyMemeURL\"><br><br>"
+                            "<input type=\"submit\" value=\"Submit\">"
+                            "</form>"
+                        } else {
+                            memeoutput += memearray[i].replyTo
+                        }
+                        memeoutput += "<br><br>"
+                    }
+
+                    document.getElementById("MemeList").innerHTML = memeoutput;
+                    document.getElementById("MemeList").style.visibility = "visible";
+                }
+
+            }
+            request.send();
+
+        }
+        function memeRepost(repostMemeID, repostMemeExpiration, repostMemeDescription, repostMemeImageURL) {
+            var request = new XMLHttpRequest();
+
+            request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error reposting the meme. Please try again.")
+                    } else {
+                        alert("Meme successfully reposted!")
+                    }
+                }
+            };
+
+            var body = {
+                "owner": null /* **current authed user** */,
+                "receiver": null,
+                "expiredAt": repostMemeExpiration,
+                "description": "" + repostMemeDescription,
+                "private": true,
+                "replyTo": null,
+                "imageUrl": "" + repostMemeImageURL,
+                "imageBase64": null
+            };
+
+            request.send(body);
+        }
+        function ghostMeme(ghostMemeID) {
+            var request = new XMLHttpRequest();
+
+            request.open('PUT', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes/' + ghostMemeID);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error ghosting your meme. Please try again.")
+                    } else {
+                        alert("Meme successfully ghostmemed!")
+                    }
+                }
+            };
+
+            var body = { "expiredAt": 0 };
+
+            request.send(body);
+        }
+        function replyToMeme(form, replyMemeID) {
+            var replyMemeDescription = document.getElementById("memeDescription")
+            var replyMemeImageURL = document.getElementById("replyMemeURL");
+
+            if (replyMemeDescription === null && replyMemeImageURL === null) {
+                alert("Please provide either an image URL or a description.")
+                return;
+            }
+
+            var dateReplyMemeToExpireAt = document.forms["replyMemeForm"]["expirationReplyMeme"].value;
+            var replyMemeDateFormat = new Date(dateReplyMemeToExpireAt);
+            var replyMemeTimeToExpireUnix = replyMemeDateFormat.getTime();
+            var replyMemeTimeToExpireUnixNumberFormat = replyMemeTimeToExpireUnix.valueOf();
+            if (document.getElementById("noExpirationReplyMeme").checked === true) {
+                var replyMemeTimeToExpireUnixNumberFormat = null;
+            }
+
+
+            var request = new XMLHttpRequest();
+
+            request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error creating your meme. Please try again.")
+                    } else {
+                        alert("Meme successfully created!")
+                    }
+                }
+            };
+
+
+            var body = {
+                "owner": "", /* Figure out how to get current user */
+                "receiver": null,
+                "expiredAt": replyMemeTimeToExpireUnixNumberFormat,
+                "description": "" + replyMemeDescription,
+                "private": true,
+                "replyTo": replyMemeID,
+                "imageUrl": "" + replyMemeImageURL,
+                "imageBase64": null
+            };
+
+            request.send();
+            alert("Thank you! Please hit \"OK\" for the request to process.")
+        }
+        function checkLikes(checkLikesMemeID) {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes/' + checkLikesMemeID + '/likes/' /* + [Insert authed User ID here] */);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    if (this.status == 200) { /* If possible, make the == === but because I can't test right now I'm keeping at == to play it safe */
+                        alert("You have liked this meme!")
+                    } else if (this.status == 404) {
+                        alert("You have not liked this meme.")
+                    } else {
+                        alert("Your like status on this meme could not be determined at this moment. Please try again.")
+                    }
+                }
+
+            };
+
+            request.send();
+        }
+
+        function likeMeme(likeMemeMemeID) {
+            var request = new XMLHttpRequest();
+
+            request.open('PUT', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes/' + likeMemeMemeID + '/likes/' /* + [Insert authed user ID here] */);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error liking this meme. Please try again.")
+                    } else {
+                        alert("Meme successfully liked!")
+                    }
+                }
+            };
+
+            request.send();
+        }
+
+        function unlikeMeme(unlikeMemeMemeID) {
+            var request = new XMLHttpRequest();
+
+            request.open('DELETE', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes/5eee34b3ca37750008547371/likes/5eee34b3ca37750008547372');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error unliking this meme. Please try again.")
+                    } else {
+                        alert("Meme successfully unliked.")
+                    }
+                }
+            };
+
+            request.send();
+        }
+        function createMeme(form) {
+            var newMemeDescription = document.getElementById("memeDescription")
+            var memeImageURL = document.getElementById("memeURL");
+
+            var dateMemeToExpireAt = document.forms["createMemeForm"]["expirationNewMeme"].value;
+            var memeDateFormat = new Date(dateMemeToExpireAt);
+            var memeTimeToExpireUnix = memeDateFormat.getTime();
+            var memeTimeToExpireUnixNumberFormat = memeTimeToExpireUnix.valueOf();
+            if (document.forms["createMemeForm"]["noExpirationNewMeme"].value === 'on') {
+                var timeToExpireUnixNumberFormat = null;
+            }
+
+
+            var request = new XMLHttpRequest();
+
+            request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("Sorry, there was an error creating your meme. Please try again.")
+                    } else {
+                        alert("Meme successfully created!")
+                    }
+                }
+            };
+
+
+            var body = {
+                "owner": "", /* Figure out how to get current user */
+                "receiver": null,
+                "expiredAt": memeTimeToExpireUnixNumberFormat,
+                "description": newMemeDescription,
+                "private": true,
+                "replyTo": null,
+                "imageUrl": "" + memeImageURL,
+                "imageBase64": null
+            };
+
+            request.send();
+            alert("Thank you! Please hit \"OK\" for the request to process.")
+        }
+    </script>
+    <h3 style="text-align: center;">Send a Meme</h3>
+    <form onsubmit="return createMeme(this)" id="createMemeForm">
+        <label for="expirationNewMeme">Enter the time (local time) you want the meme to expire at:</label><br>
+        <input type="datetime-local" id="expirationNewMeme" name="expirationNewMeme"><br><br>
+        <label for="noExpirationNewMeme">Alternatively, check this box to not set an expiration time (your input above
+            will
+            be ignored):</label><br>
+        <input type="checkbox" id="noExpirationNewMeme" name="noExpirationNewMeme"><br><br>
+        <label for="memeDescription">Enter the description of the meme [optional]:</label><br>
+        <input type="text" id="memeDescription" name="memeDescription"><br><br>
+        <label for="memeURL">Enter the URL for the image of the meme:</label><br>
+        <input type="url" id="memeURL" name="memeURL" required><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <h3 style="text-align: center;">Meme Feed</h3>
+    <div id="MemeList">
+    </div>
+    <button onclick="listMemes()">Refresh Feed</button>
+</body>
+</html>

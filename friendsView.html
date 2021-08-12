@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html xml:lang>
+
+<head>
+    <title>Chats -- Ghostmeme</title>
+
+    <script src="/js/memefunctions.js"></script>
+</head>
+
+<body onload="onLoadPage()">
+    <script>
+        function reloadPage() {
+            location.reload();
+            return false;
+        }
+        
+        function onLoadPage() {
+            friendsList();
+            incomingFriendRequests();
+            outgoingFriendRequests();
+        }
+
+        function friendsList() {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID HERE */ + '/friends?');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error loading your friends list, please try refreshing your friends list feed.")
+                    } else {
+                        var returnValue = "";
+                        for (i = 0; i < result.users.length; i++) {
+                            returnValue += result.users[i] + "&nbsp;&nbsp;<button onclick=\"removeFriend(" + result.users[i] + ")\">Remove Friend</button>"
+                        }
+                    }
+
+                    document.getElementById("friendsList") = returnValue;
+                    document.getElementById("friendsList").style.visibility = "visible";
+                }
+            };
+
+            request.send();
+        }
+
+        function incomingFriendRequests() {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/incoming?');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error loading your incoming friend requests, please try refreshing your incoming friend requests.")
+                    } else {
+                        var returnValue2 = "";
+                        for (i = 0; i < result.users.length; i++) {
+                            returnValue2 += result.users[i] + "&nbsp;&nbsp;<button onclick=\"acceptFriendRequest(" + result.users[i] + ")\">Accept</button>&nbsp;&nbsp;<button onclick=\"rejectFriendRequest(" + result.users[i] + ")\">Reject</button>"
+                        }
+                    }
+
+                    document.getElementById("incomingFriendRequests") = returnValue;
+                    document.getElementById("incomingFriendRequests").style.visibility = "visible";
+                }
+            };
+
+            request.send();
+
+
+        }
+
+        function removeFriend(removeFriendID) {
+            var request = new XMLHttpRequest();
+
+            request.open('DELETE', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GETUSERID */ + '/friends/' + removeFriendID);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    alert("Success, your friend has been removed. Please refresh the page to see the changes.")
+                }
+            };
+        }
+
+        function outgoingFriendRequests() {
+            var request = new XMLHttpRequest();
+
+            request.open('GET', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/outgoing?');
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error loading outgoing friend requests, please refresh the outgoing friend request feed.")
+                    } else {
+                        var returnValue1 = "";
+                        for (i = 0; i < result.users.length; i++) {
+                            returnValue1 += result.users[i] + "&nbsp;&nbsp;<button onclick=\"cancelFriendRequest(" + result.users[i] + ")\">Cancel Request</button>"
+                        }
+                    }
+
+                    document.getElementById("outgoingFriendRequests") = returnValue;
+                    document.getElementById("outgoignFriendRequests").style.visibility = "visible";
+                }
+            };
+
+            request.send();
+
+        }
+
+        function sendFriendRqeuest(form) {
+            var request = new XMLHttpRequest();
+
+            request.open('PUT', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/incoming/' + document.getElementById("friendRequestReceiver"));
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+                }
+
+                var result = JSON.parse(this.responseText);
+
+                if (!result.success) {
+                    alert("There was an error, please try again.")
+                } else {
+                    alert("Success, you friend request was sent!")
+                }
+            };
+
+            request.send();
+            alert("Thank you, your request was sent. Please click \"OK\" to proceed.")
+
+        }
+
+        function acceptFriendRequest(acceptRequestID) {
+            var request = new XMLHttpRequest();
+
+            request.open('DELETE', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/incoming/' + acceptRequestID);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error, please try again.")
+                    } else {
+                        var request = new XMLHttpRequest();
+
+                        request.open('PUT', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/friends/' + acceptRequestID);
+
+                        request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+                        request.setRequestHeader('content-type', 'application/json');
+
+                        request.onreadystatechange = function () {
+                            if (this.readyState === 4) {
+                                console.log('Status:', this.status);
+                                console.log('Headers:', this.getAllResponseHeaders());
+                                console.log('Body:', this.responseText);
+
+                                var result1 = JSON.parse(this.responseText);
+
+                                if (!result1.success) {
+                                    alert("There was an error, please try again.")
+                                } else {
+                                    alert("Success, you accepted the friend request!")
+                                }
+                            }
+                        };
+
+                        request.send();
+                        alert("Please click \"OK\" again to proceed.")
+                    }
+                }
+            };
+
+            request.send();
+            alert("Thank you, the request was sent. Please click \"OK\" to proceed.")
+        }
+
+        function denyFriendRequest(denyRequestID) {
+            var request = new XMLHttpRequest();
+
+            request.open('DELETE', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/incoming/' + denyRequestID);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error, please try again.")
+                    } else {
+                        alert("Success, the friend request was denied. Please refresh the page to see your changes.")
+                    }
+                }
+            };
+
+            request.send();
+            alert("Thank you, the request was sent. Please click \"OK\" to proceed.")
+        }
+
+        function cancelFriendRequest(cancelRequestID) {
+            var request = new XMLHttpRequest();
+
+            request.open('DELETE', 'https://ghostmeme.api.hscc.bdpa.org/v1/users/' + /* **GET USER ID */ + '/requests/incoming/' + cancelRequestID);
+
+            request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+            request.setRequestHeader('content-type', 'application/json');
+
+            request.onreadystatechange = function () {
+                if (this.readyState === 4) {
+                    console.log('Status:', this.status);
+                    console.log('Headers:', this.getAllResponseHeaders());
+                    console.log('Body:', this.responseText);
+
+                    var result = JSON.parse(this.responseText);
+
+                    if (!result.success) {
+                        alert("There was an error, please try again.")
+                    } else {
+                        alert("Success, your friend request was cancelled. Please refresh the page to see your changes.")
+                    }
+                }
+            };
+
+            request.send();
+            alert("Thank you, the request was sent. Please click \"OK\" to proceed.")
+        }
+    </script>
+
+    <h1 style="text-align: center;">Friends</h1>
+    <h3 style="text-align: center;">Send a Meme</h3>
+    <form onsubmit="return sendFriendRqeuest(this)" id="sendFriendRqeuestForm">
+        <label for="friendRequestReceiver">Enter the ID of the recipient of the request:</label><br>
+        <input type="text" id="friendRequestReceiver" name="friendRequestReceiver" required><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <h3 style="text-align: center;">Incoming Friend Requests</h3>
+    <div id="incomingFriendRequests">
+        <button onclick="incomingFriendRequests()">Refresh Feed</button>
+    </div>
+    <h3 style="text-align: center;">Outgoing Friend Requests</h3>
+    <div id="outgoingFriendRequests">
+        <button onclick="outgoingFriendRequests()">Refresh Feed</button>
+    </div>
+
+    <h3 style="text-align: center;">Friends List</h3>
+    <div id="friendsList">
+        <button onclick="friendsList()">Refresh Feed</button>
+    </div>
+
+
+
+
+</body>
+
+</html>

@@ -101,6 +101,33 @@
 
     }
 
+    let base64String = "";
+
+    function imageUploaded() {
+      var file = document.querySelector(
+        'input[type=file]')['files'][0];
+
+      var reader = new FileReader();
+      console.log("next");
+
+      reader.onload = function () {
+        base64String = reader.result.replace("data:", "")
+          .replace(/^.+,/, "");
+
+        imageBase64Stringsep = base64String;
+
+        // alert(imageBase64Stringsep);
+        console.log(base64String);
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function displayString() {
+      console.log("Base64String about to be printed");
+      alert(base64String);
+    }
+
+
     function updateMemeExpiration(form) {
       var memeIDsToUse = document.getElementById("memeIDs");
       var dateToExpireAt = document.forms["editExpirationTimeForm"]["expirationTime"].value;
@@ -144,8 +171,25 @@
 
     function createMeme() {
       var memeReceiver = document.getElementById("memeRecipient");
+      var userReceivers = [];
+      var i = 0;
+      while (memeReceiver.indexOf('/') != -1) {
+        userReceivers[i] = memeReceiver.substring(0, memeReceiver.indexOf('/'));
+        memeReceiver = memeReceiver.substring(indexOf('/') + 1);
+        i++;
+      }
+      userReceivers[i] = memeReceiver;
       var newMemeDescription = document.getElementById("memeDescription")
       var memeImageURL = document.getElementById("memeURL");
+      var memeImageNotBase64 = document.getElementById("memeBase64");
+      if (base64String == "" && memeImageURL == null) {
+        alert("Please either upload an image or put an image URL.")
+        return;
+      }
+      if (base64String != "" && memeImageURL != null) {
+        alert("Please input either an image or an image URL, not both.")
+        return;
+      }
 
       var dateMemeToExpireAt = document.forms["createMemeForm"]["expirationNewMeme"].value;
       var memeDateFormat = new Date(dateMemeToExpireAt);
@@ -155,38 +199,43 @@
         var timeToExpireUnixNumberFormat = null;
       }
 
+      for (j = 0; j <= i; j++) {
+        var request = new XMLHttpRequest();
 
-      var request = new XMLHttpRequest();
+        request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
 
-      request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+        request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+        request.setRequestHeader('content-type', 'application/json');
 
-      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
-      request.setRequestHeader('content-type', 'application/json');
+        request.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            console.log('Status:', this.status);
+            console.log('Headers:', this.getAllResponseHeaders());
+            console.log('Body:', this.responseText);
 
-      request.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          console.log('Status:', this.status);
-          console.log('Headers:', this.getAllResponseHeaders());
-          console.log('Body:', this.responseText);
+            var result0 = JSON.parse(this.responseText);
 
-          alert("Success!")
-        }
-      };
+            if (result0.success) {
 
-
-      var body = {
-        "owner": "", /* Figure out how to get current user */
-        "receiver": memeReceiver,
-        "expiredAt": memeTimeToExpireUnixNumberFormat,
-        "description": "" + newMemeDescription,
-        "private": true,
-        "replyTo": null,
-        "imageUrl": "" + memeImageURL,
-        "imageBase64": null
-      };
-
-      request.send();
-      alert("Thank you! Please hit \"OK\" for the request to process.")
+              alert("Success!")
+            } else {
+              alert("There was an error, please try again.")
+            }
+          }
+        };
+        var body = {
+          "owner": "", /* Figure out how to get current user */
+          "receiver": memeReceiver,
+          "expiredAt": memeTimeToExpireUnixNumberFormat,
+          "description": "" + newMemeDescription,
+          "private": true,
+          "replyTo": null,
+          "imageUrl": "" + memeImageURL,
+          "imageBase64": base64String
+        };
+        request.send();
+        alert("Thank you! Please hit \"OK\" for the next request to process.")
+      }
     }
   </script>
 
@@ -216,8 +265,10 @@
     <label for="memeDescription">Enter the description of the meme [optional]:</label><br>
     <input type="text" id="memeDescription" name="memeDescription"><br><br>
     <label for="memeURL">Enter the URL for the image of the meme:</label><br>
-    <input type="url" id="memeURL" name="memeURL" required><br><br>
-    <input type="submit" value="Submit">
+    <input type="url" id="memeURL" name="memeURL"><br><br>
+    <label for="memeBase64">OR upload an image of the meme:</label><br>
+    <input type="file" id="memeBase64" name="memeBase64" accept="image/*" onchange="imageUploaded()"><br><br>
+    <input type="submit" value="submit">
   </form>
 
 

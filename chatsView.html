@@ -146,6 +146,25 @@
       var memeReceiver = document.getElementById("memeRecipient");
       var newMemeDescription = document.getElementById("memeDescription")
       var memeImageURL = document.getElementById("memeURL");
+      var memeImageNotBase64 = document.getElementById("memeBase64");
+      var isFileUpload = false;
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        console.log('RESULT', reader.result)
+      }
+      reader.readAsDataURL(memeImageNotBase64);
+
+      if (reader.result == null && memeImageURL == null) {
+        alert("Please either upload an image or put an image URL.")
+        return;
+      }
+      if (reader.result != null && memeImageURL != null) {
+        alert("Please input either an image or an image URL, not both.")
+        return;
+      }
+      if (reader.result != null) {
+        isFileUpload = true;
+      }
 
       var dateMemeToExpireAt = document.forms["createMemeForm"]["expirationNewMeme"].value;
       var memeDateFormat = new Date(dateMemeToExpireAt);
@@ -172,19 +191,16 @@
           alert("Success!")
         }
       };
-
-
-      var body = {
-        "owner": "", /* Figure out how to get current user */
-        "receiver": memeReceiver,
-        "expiredAt": memeTimeToExpireUnixNumberFormat,
-        "description": "" + newMemeDescription,
-        "private": true,
-        "replyTo": null,
-        "imageUrl": "" + memeImageURL,
-        "imageBase64": null
-      };
-
+        var body = {
+          "owner": "", /* Figure out how to get current user */
+          "receiver": memeReceiver,
+          "expiredAt": memeTimeToExpireUnixNumberFormat,
+          "description": "" + newMemeDescription,
+          "private": true,
+          "replyTo": null,
+          "imageUrl": "" + memeImageURL,
+          "imageBase64": reader.re
+        };
       request.send();
       alert("Thank you! Please hit \"OK\" for the request to process.")
     }
@@ -216,8 +232,10 @@
     <label for="memeDescription">Enter the description of the meme [optional]:</label><br>
     <input type="text" id="memeDescription" name="memeDescription"><br><br>
     <label for="memeURL">Enter the URL for the image of the meme:</label><br>
-    <input type="url" id="memeURL" name="memeURL" required><br><br>
-    <input type="submit" value="Submit">
+    <input type="url" id="memeURL" name="memeURL"><br><br>
+    <label for="memeBase64">OR upload an image of the meme:</label><br>
+    <input type="file" id="memeBase64" name="memeBase64" accept="image/*"><br><br>
+    <input type="submit" value="submit">
   </form>
 
 

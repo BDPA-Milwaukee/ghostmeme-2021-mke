@@ -171,6 +171,14 @@
 
     function createMeme() {
       var memeReceiver = document.getElementById("memeRecipient");
+      var userReceivers = [];
+      var i = 0;
+      while (memeReceiver.indexOf('/') != -1) {
+        userReceivers[i] = memeReceiver.substring(0, memeReceiver.indexOf('/'));
+        memeReceiver = memeReceiver.substring(indexOf('/') + 1);
+        i++;
+      }
+      userReceivers[i] = memeReceiver;
       var newMemeDescription = document.getElementById("memeDescription")
       var memeImageURL = document.getElementById("memeURL");
       var memeImageNotBase64 = document.getElementById("memeBase64");
@@ -191,42 +199,43 @@
         var timeToExpireUnixNumberFormat = null;
       }
 
+      for (j = 0; j <= i; j++) {
+        var request = new XMLHttpRequest();
 
-      var request = new XMLHttpRequest();
+        request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
 
-      request.open('POST', 'https://ghostmeme.api.hscc.bdpa.org/v1/memes');
+        request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
+        request.setRequestHeader('content-type', 'application/json');
 
-      request.setRequestHeader('key', 'mil5f5cd-17a9-44b9-b012-25a59a8a6d7f');
-      request.setRequestHeader('content-type', 'application/json');
+        request.onreadystatechange = function () {
+          if (this.readyState === 4) {
+            console.log('Status:', this.status);
+            console.log('Headers:', this.getAllResponseHeaders());
+            console.log('Body:', this.responseText);
 
-      request.onreadystatechange = function () {
-        if (this.readyState === 4) {
-          console.log('Status:', this.status);
-          console.log('Headers:', this.getAllResponseHeaders());
-          console.log('Body:', this.responseText);
+            var result0 = JSON.parse(this.responseText);
 
-          var result0 = JSON.parse(this.responseText);
+            if (result0.success) {
 
-          if (result0.success) {
-
-          alert("Success!")
-          } else {
-            alert("There was an error, please try again.")
+              alert("Success!")
+            } else {
+              alert("There was an error, please try again.")
+            }
           }
-        }
-      };
-      var body = {
-        "owner": "", /* Figure out how to get current user */
-        "receiver": memeReceiver,
-        "expiredAt": memeTimeToExpireUnixNumberFormat,
-        "description": "" + newMemeDescription,
-        "private": true,
-        "replyTo": null,
-        "imageUrl": "" + memeImageURL,
-        "imageBase64": base64String
-      };
-      request.send();
-      alert("Thank you! Please hit \"OK\" for the request to process.")
+        };
+        var body = {
+          "owner": "", /* Figure out how to get current user */
+          "receiver": memeReceiver,
+          "expiredAt": memeTimeToExpireUnixNumberFormat,
+          "description": "" + newMemeDescription,
+          "private": true,
+          "replyTo": null,
+          "imageUrl": "" + memeImageURL,
+          "imageBase64": base64String
+        };
+        request.send();
+        alert("Thank you! Please hit \"OK\" for the next request to process.")
+      }
     }
   </script>
 
